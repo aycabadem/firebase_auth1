@@ -39,7 +39,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   late FirebaseAuth auth;
   final String _email = 'aycabadem12@gmail.com';
-  final String _password = 'password123';
+  final String _password = 'password';
   @override
   void initState() {
     auth = FirebaseAuth.instance;
@@ -101,6 +101,24 @@ class _MyHomePageState extends State<MyHomePage> {
                 'Delete user',
               ),
             ),
+            ElevatedButton(
+              onPressed: () {
+                changePassword();
+              },
+              style: ElevatedButton.styleFrom(primary: Colors.purple),
+              child: Text(
+                'Change Password',
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                changeEmail();
+              },
+              style: ElevatedButton.styleFrom(primary: Colors.brown),
+              child: Text(
+                'Change Email',
+              ),
+            ),
           ],
         ),
       ),
@@ -145,6 +163,50 @@ class _MyHomePageState extends State<MyHomePage> {
       await auth.currentUser!.delete();
     } else {
       debugPrint('login first');
+    }
+  }
+
+  void changePassword() async {
+    try {
+      await auth.currentUser!.updatePassword('password');
+      await auth.signOut();
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        debugPrint('reauthenticate');
+        var credential =
+            EmailAuthProvider.credential(email: _email, password: _password);
+
+        await auth.currentUser!.reauthenticateWithCredential(credential);
+
+        await auth.currentUser!.updatePassword('password');
+        await auth.signOut();
+
+        debugPrint('password changed');
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
+  void changeEmail() async {
+    try {
+      await auth.currentUser!.updateEmail('aca@acaca.com');
+      await auth.signOut();
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        debugPrint('reauthenticate');
+        var credential =
+            EmailAuthProvider.credential(email: _email, password: _password);
+
+        await auth.currentUser!.reauthenticateWithCredential(credential);
+
+        await auth.currentUser!.updateEmail('aca@acaca.com');
+        await auth.signOut();
+
+        debugPrint('email changed');
+      }
+    } catch (e) {
+      debugPrint(e.toString());
     }
   }
 }
