@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class FireStoreIslemleri extends StatelessWidget {
   FireStoreIslemleri({Key? key}) : super(key: key);
@@ -66,6 +69,11 @@ class FireStoreIslemleri extends StatelessWidget {
             onPressed: () => queryingData(),
             style: ElevatedButton.styleFrom(primary: Colors.blueAccent),
             child: const Text('Veri Sorgulama'),
+          ),
+          ElevatedButton(
+            onPressed: () => kameraGaleriImageUpload(),
+            style: ElevatedButton.styleFrom(primary: Colors.blueAccent),
+            child: const Text('Kamera Galeri Image Upload'),
           ),
         ],
       )),
@@ -187,5 +195,42 @@ class FireStoreIslemleri extends StatelessWidget {
     });
   }
 
-  queryingData() {}
+  queryingData() async {
+    var _userRef = _firestore.collection('users');
+    var _sonuc = await _userRef.where('yas', isEqualTo: 34).get();
+
+    // for (var user in _sonuc.docs) {
+    //   debugPrint(user.data().toString());
+    // }
+    var _sirala = await _userRef.orderBy('yas', descending: true).get();
+    for (var user in _sirala.docs) {
+      debugPrint(user.data().toString());
+    }
+
+    //String ARAMA:
+    // var _stringSearch = await _userRef
+    //     .orderBy('email')
+    //     .startAt(['emre']).endAt(['emre' + '\uf8ff']).get();
+
+    // for (var user in _stringSearch.docs) {
+    //   debugPrint(user.data().toString());
+    // }
+  }
+
+  kameraGaleriImageUpload() async {
+    final ImagePicker _picker = ImagePicker();
+    XFile? _file = await _picker.pickImage(source: ImageSource.camera);
+
+    var _profileRef = FirebaseStorage.instance.ref('users/profil_resimleri');
+
+    var _task = _profileRef.putFile(File(_file!.path));
+
+    _task.whenComplete(() async {
+      var _url = await _profileRef.getDownloadURL();
+      _firestore
+          .doc('users/0UC3vfYHAMZqM7bnzKXq')
+          .set({'profile_pic': _url.toString()}, SetOptions(merge: true));
+      debugPrint(_url);
+    });
+  }
 }
