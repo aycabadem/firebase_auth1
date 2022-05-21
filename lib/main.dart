@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import 'firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -119,6 +120,24 @@ class _MyHomePageState extends State<MyHomePage> {
                 'Change Email',
               ),
             ),
+            ElevatedButton(
+              onPressed: () {
+                googleIleGiris();
+              },
+              style: ElevatedButton.styleFrom(primary: Colors.green),
+              child: Text(
+                'sign in with gmail',
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                loginWithPhoneNumber();
+              },
+              style: ElevatedButton.styleFrom(primary: Colors.amber),
+              child: Text(
+                'login with phone number',
+              ),
+            ),
           ],
         ),
       ),
@@ -155,7 +174,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void signOutUser() async {
-    await auth.signOut();
+    var _user = GoogleSignIn().currentUser;
+    if (_user != null) {
+      await GoogleSignIn().disconnect(); //google tarafından çıkarken
+    }
+
+    await auth.signOut(); //firabaseden çıkarken
   }
 
   void deleteUser() async {
@@ -208,5 +232,44 @@ class _MyHomePageState extends State<MyHomePage> {
     } catch (e) {
       debugPrint(e.toString());
     }
+  }
+
+  void googleIleGiris() async {
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+    final GoogleSignInAuthentication? googleAuth =
+        await googleUser?.authentication;
+
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth?.accessToken,
+      idToken: googleAuth?.idToken,
+    );
+
+    await FirebaseAuth.instance.signInWithCredential(credential);
+  }
+
+  void loginWithPhoneNumber() async {
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: '+351913447330',
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        debugPrint('verificationCompleted tetiklendi');
+        debugPrint(credential.toString());
+        await auth.signInWithCredential(credential);
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        debugPrint(e.toString());
+      },
+      codeSent: (String verificationId, int? resendToken) async {
+        debugPrint('codeSent tetiklendi');
+        String _smsCode = '123456';
+        var _credential = PhoneAuthProvider.credential(
+            verificationId: verificationId, smsCode: _smsCode);
+
+        await auth.signInWithCredential(_credential);
+      },
+      codeAutoRetrievalTimeout: (String verificationId) {
+        debugPrint(' codeAutoRetrievalTimeout tetiklendi');
+      },
+    );
   }
 }
