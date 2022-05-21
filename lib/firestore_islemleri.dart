@@ -62,6 +62,11 @@ class FireStoreIslemleri extends StatelessWidget {
             style: ElevatedButton.styleFrom(primary: Colors.brown),
             child: const Text('Transaction Kavrami'),
           ),
+          ElevatedButton(
+            onPressed: () => queryingData(),
+            style: ElevatedButton.styleFrom(primary: Colors.blueAccent),
+            child: const Text('Veri Sorgulama'),
+          ),
         ],
       )),
     );
@@ -165,5 +170,22 @@ class FireStoreIslemleri extends StatelessWidget {
     await _batch.commit();
   }
 
-  transactionKavrami() {}
+  transactionKavrami() async {
+    _firestore.runTransaction((transaction) async {
+      DocumentReference<Map<String, dynamic>> aycaRef =
+          _firestore.doc('users/0UC3vfYHAMZqM7bnzKXq');
+      DocumentReference<Map<String, dynamic>> emreRef =
+          _firestore.doc('users/GJ27Ij9cb6izAvDhqoFb');
+
+      var _aycaSnapshot = await transaction.get(aycaRef);
+      var _aycaBakiye = _aycaSnapshot.data()!['para'];
+      if (_aycaBakiye >= 100) {
+        var _yeniBakiye = _aycaSnapshot.data()!['para'] - 100;
+        transaction.update(aycaRef, {'para': _yeniBakiye});
+        transaction.update(emreRef, {'para': FieldValue.increment(100)});
+      }
+    });
+  }
+
+  queryingData() {}
 }
