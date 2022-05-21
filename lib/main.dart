@@ -265,7 +265,7 @@ class _MyHomePageState extends State<MyHomePage> {
         var _credential = PhoneAuthProvider.credential(
             verificationId: verificationId, smsCode: _smsCode);
 
-        await auth.signInWithCredential(_credential);
+        // await auth.signInWithCredential(_credential);
       },
       codeAutoRetrievalTimeout: (String verificationId) {
         debugPrint(' codeAutoRetrievalTimeout tetiklendi');
